@@ -26,7 +26,7 @@ h1{font-size:26px;font-weight:800;margin:4px 0 2px;letter-spacing:-.01em}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
 .tabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:14px;margin-bottom:16px}
 .tabrow{display:flex;align-items:center;gap:6px;margin-bottom:16px}.tabrow .tabs{flex:1;min-width:0;margin-bottom:0}
-.tag{font-style:normal;font-size:11px;font-weight:800;background:var(--line);color:var(--muted);border-radius:99px;padding:1px 8px;margin-left:4px;vertical-align:middle}.item.opt{border-style:dashed}.seg button.p[aria-pressed="true"]{border-color:var(--ink);background:var(--line)}button.buy{border:0}
+.tag{font-style:normal;font-size:11px;font-weight:800;background:var(--line);color:var(--muted);border-radius:99px;padding:1px 8px;margin-left:4px;vertical-align:middle}.item.opt{border-style:dashed}.seg button.p[aria-pressed="true"]{border-color:var(--ink);background:var(--line)}button.buy{border:0}.br{color:var(--ink);font-weight:700}
 .cm-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}.cm-row input{flex:1;min-width:0}.cm-row .cn{flex:none;font-size:13px;color:var(--muted);min-width:22px;text-align:right}.cm-row .btn-ok{flex:none;border:0;border-radius:12px;padding:11px 16px;font-weight:800}#manCat{display:block;margin-top:2px;padding-left:0}
 .tabs button{flex:1;border:0;background:transparent;padding:9px 4px;border-radius:11px;font-weight:700;font-size:14px;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -135,6 +135,8 @@ input,select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:
     <div class="seg pri"><button class="p" data-p="must" aria-pressed="true">Wajib beli</button><button class="p" data-p="opt" aria-pressed="false">Pilihan</button></div>
     <label for="fName">Nama barang</label>
     <input id="fName" maxlength="60" placeholder="Contoh: Bedung">
+    <label for="fBr">Jenama (pilihan)</label>
+    <input id="fBr" maxlength="40" placeholder="Contoh: Pigeon, Huggies">
     <label for="fCat">Kategori</label>
     <select id="fCat"></select><button class="link" id="manCat" type="button">Urus kategori (tambah, ubah nama, padam)</button>
     <label for="fQty">Kuantiti atau catatan (pilihan)</label>
@@ -242,7 +244,7 @@ var delSvg='<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h1
 function isL(i){return i.pri!=='opt'||!!i.inc}
 function optHtml(i,w){return '<div class="item opt '+w+'"><div class="txt"><b>'+esc(i.name)+' <em class="tag">'+esc(curP.opt)+'</em></b>'+meta(i)+chips(i)+'</div><button class="buy" data-a="b" data-id="'+i.id+'" aria-label="Masukkan '+esc(i.name)+' ke senarai beli">'+esc(curP.buy)+'</button><button class="ic" aria-label="Ubah '+esc(i.name)+'" data-a="e" data-id="'+i.id+'">'+editSvg+'</button><button class="ic del" aria-label="Padam '+esc(i.name)+'" data-a="d" data-id="'+i.id+'">'+delSvg+'</button></div>'}
 function rm(n){return 'RM '+Number(n).toFixed(2)}
-function meta(i){return i.qty?'<span>'+esc(i.qty)+'</span>':''}
+function meta(i){var p=[];if(i.brand)p.push('<strong class="br">'+esc(i.brand)+'</strong>');if(i.qty)p.push(esc(i.qty));return p.length?'<span>'+p.join(' · ')+'</span>':''}
 function sv(v){return v===''||v==null?'':v}
 function pn(v){var n=parseFloat(String(v).replace(',','.'));return isNaN(n)||n<0?'':n}
 function ln(v){v=v.trim();return v&&!/^https?:\/\//i.test(v)?'https://'+v:v}
@@ -300,7 +302,7 @@ function openSheet(it){
   form.id=it?it.id:null;
   $('sTitle').textContent=it?'Ubah barang':'Tambah barang';
   setWho(it?it.who:(tab==='mom'?'mom':'baby'),it?it.cat:null);setPri(it?(it.pri||'must'):'must');
-  $('fName').value=it?it.name:'';$('fQty').value=it?it.qty:'';$('fSP').value=it?sv(it.sp):'';$('fSL').value=it&&it.sl?it.sl:'';$('fTP').value=it?sv(it.tp):'';$('fTL').value=it&&it.tl?it.tl:'';$('fKP').value=it?sv(it.kp):'';$('fKN').value=it&&it.kn?it.kn:'';
+  $('fName').value=it?it.name:'';$('fBr').value=it&&it.brand?it.brand:'';$('fQty').value=it?it.qty:'';$('fSP').value=it?sv(it.sp):'';$('fSL').value=it&&it.sl?it.sl:'';$('fTP').value=it?sv(it.tp):'';$('fTL').value=it&&it.tl?it.tl:'';$('fKP').value=it?sv(it.kp):'';$('fKN').value=it&&it.kn?it.kn:'';
   $('scrim').classList.add('on');
   setTimeout(function(){$('fName').focus()},60);
 }
@@ -311,9 +313,9 @@ function save(){
   $('fName').style.borderColor='';
   var sp=pn($('fSP').value),tp=pn($('fTP').value);
   var sl=ln($('fSL').value),tl=ln($('fTL').value);var kp=pn($('fKP').value),kn=$('fKN').value.trim();
-  var d={pri:form.p,who:form.w,cat:$('fCat').value,name:name,qty:$('fQty').value.trim(),sp:sp,sl:sl,tp:tp,tl:tl,kp:kp,kn:kn};
-  if(form.id){items.forEach(function(i){if(i.id===form.id){var wo=i.pri==='opt';i.pri=d.pri;if(d.pri==='opt'&&!wo)i.inc=!!i.done;i.who=d.who;i.cat=d.cat;i.name=d.name;i.qty=d.qty;i.sp=d.sp;i.sl=d.sl;i.tp=d.tp;i.tl=d.tl;i.kp=d.kp;i.kn=d.kn}})}
-  else items.push({id:uid(),who:d.who,cat:d.cat,name:d.name,qty:d.qty,sp:d.sp,sl:d.sl,tp:d.tp,tl:d.tl,kp:d.kp,kn:d.kn,done:false,pri:d.pri,inc:false});
+  var d={brand:$('fBr').value.trim(),pri:form.p,who:form.w,cat:$('fCat').value,name:name,qty:$('fQty').value.trim(),sp:sp,sl:sl,tp:tp,tl:tl,kp:kp,kn:kn};
+  if(form.id){items.forEach(function(i){if(i.id===form.id){var wo=i.pri==='opt';i.pri=d.pri;if(d.pri==='opt'&&!wo)i.inc=!!i.done;i.brand=d.brand;i.who=d.who;i.cat=d.cat;i.name=d.name;i.qty=d.qty;i.sp=d.sp;i.sl=d.sl;i.tp=d.tp;i.tl=d.tl;i.kp=d.kp;i.kn=d.kn}})}
+  else items.push({id:uid(),who:d.who,cat:d.cat,name:d.name,qty:d.qty,sp:d.sp,sl:d.sl,tp:d.tp,tl:d.tl,kp:d.kp,kn:d.kn,brand:d.brand,done:false,pri:d.pri,inc:false});
   persist();render();closeSheet();
 }
 function toast(msg,undo){
